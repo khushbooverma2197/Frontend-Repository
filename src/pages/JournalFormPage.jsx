@@ -70,8 +70,11 @@ export default function JournalFormPage() {
     try {
       const journalData = {
         ...formData,
-        highlights: formData.highlights.split(',').map(h => h.trim()).filter(h => h)
+        highlights: formData.highlights.split(',').map(h => h.trim()).filter(h => h),
+        userId: 1 // Add default user ID
       };
+
+      console.log('Submitting journal data:', journalData);
 
       if (isEditing) {
         await updateJournal(id, journalData);
@@ -82,7 +85,8 @@ export default function JournalFormPage() {
       navigate('/journals');
     } catch (error) {
       console.error('Error saving journal:', error);
-      alert('Failed to save journal: ' + error.message);
+      console.error('Error details:', error.response?.data);
+      alert('Failed to save journal: ' + (error.response?.data?.details || error.message));
     } finally {
       setSubmitting(false);
     }
