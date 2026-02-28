@@ -1,12 +1,28 @@
-import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navigation from './components/Navigation';
+import HomePage from './pages/HomePage';
+import DestinationDetailPage from './pages/DestinationDetailPage';
+import BudgetPlannerPage from './pages/BudgetPlannerPage';
+import JournalsPage from './pages/JournalsPage';
+import JournalFormPage from './pages/JournalFormPage';
+import ReviewsPage from './pages/ReviewsPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* TODO: Add routing and main layout */}
-      <h1 className="text-3xl font-bold text-center mt-10">Travel Inspiration Platform</h1>
-      {/* TODO: Add navigation, routes, and main features */}
-    </div>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/destination/:id" element={<DestinationDetailPage />} />
+          <Route path="/budget" element={<BudgetPlannerPage />} />
+          <Route path="/journals" element={<JournalsPage />} />
+          <Route path="/journals/new" element={<JournalFormPage />} />
+          <Route path="/journals/:id/edit" element={<JournalFormPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
