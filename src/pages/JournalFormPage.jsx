@@ -68,17 +68,18 @@ export default function JournalFormPage() {
     setSubmitting(true);
 
     try {
+      // Clean and validate data before sending
       const journalData = {
         destinationId: formData.destinationId,
-        userId: formData.userId || 1,
-        title: formData.title,
-        content: formData.content,
+        userId: 1, // Default user ID
+        title: formData.title || 'Untitled Journal',
+        content: formData.content || '',
         visitDate: formData.visitDate || new Date().toISOString().split('T')[0],
         rating: parseInt(formData.rating) || 5,
         photos: Array.isArray(formData.photos) ? formData.photos : [],
-        highlights: Array.isArray(formData.highlights) 
-          ? formData.highlights 
-          : (formData.highlights ? formData.highlights.split(',').map(h => h.trim()).filter(h => h) : []),
+        highlights: typeof formData.highlights === 'string' 
+          ? formData.highlights.split(',').map(h => h.trim()).filter(h => h)
+          : (Array.isArray(formData.highlights) ? formData.highlights : []),
         isPublic: Boolean(formData.isPublic)
       };
 
