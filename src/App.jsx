@@ -5,6 +5,7 @@ import DestinationDetailPage from './pages/DestinationDetailPage';
 import BudgetPlannerPage from './pages/BudgetPlannerPage';
 import JournalsPage from './pages/JournalsPage';
 import JournalFormPage from './pages/JournalFormPage';
+import JournalDetailPage from './pages/JournalDetailPage';
 import ReviewsPage from './pages/ReviewsPage';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/budget" element={<BudgetPlannerPage />} />
           <Route path="/journals" element={<JournalsPage />} />
           <Route path="/journals/new" element={<JournalFormPage />} />
+          <Route path="/journals/:id" element={<JournalDetailPage />} />
           <Route path="/journals/:id/edit" element={<JournalFormPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
         </Routes>
