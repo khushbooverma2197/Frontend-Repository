@@ -69,9 +69,17 @@ export default function JournalFormPage() {
 
     try {
       const journalData = {
-        ...formData,
-        highlights: formData.highlights.split(',').map(h => h.trim()).filter(h => h),
-        userId: 1 // Add default user ID
+        destinationId: formData.destinationId,
+        userId: formData.userId || 1,
+        title: formData.title,
+        content: formData.content,
+        visitDate: formData.visitDate || new Date().toISOString().split('T')[0],
+        rating: parseInt(formData.rating) || 5,
+        photos: Array.isArray(formData.photos) ? formData.photos : [],
+        highlights: Array.isArray(formData.highlights) 
+          ? formData.highlights 
+          : (formData.highlights ? formData.highlights.split(',').map(h => h.trim()).filter(h => h) : []),
+        isPublic: Boolean(formData.isPublic)
       };
 
       console.log('Submitting journal data:', journalData);
