@@ -24,18 +24,25 @@ export default function DestinationList({ filters = {}, searchQuery = '' }) {
         
         // Apply filters locally
         if (filters.type) {
-          data = data.filter(d => d.type === filters.type);
+          // Filter by interests since there's no 'type' field
+          data = data.filter(d => 
+            d.interests && d.interests.some(interest => 
+              interest.toLowerCase().includes(filters.type.toLowerCase())
+            )
+          );
         }
         if (filters.minBudget) {
-          data = data.filter(d => d.averageCost >= parseInt(filters.minBudget));
+          data = data.filter(d => d.avg_daily_cost >= parseInt(filters.minBudget));
         }
         if (filters.maxBudget) {
-          data = data.filter(d => d.averageCost <= parseInt(filters.maxBudget));
+          data = data.filter(d => d.avg_daily_cost <= parseInt(filters.maxBudget));
         }
         if (filters.activities && filters.activities.length > 0) {
           data = data.filter(d => 
-            d.popularActivities && 
-            filters.activities.some(activity => d.popularActivities.includes(activity))
+            d.interests && 
+            filters.activities.some(activity => 
+              d.interests.some(interest => interest.toLowerCase().includes(activity.toLowerCase()))
+            )
           );
         }
       }
