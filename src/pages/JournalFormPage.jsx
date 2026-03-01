@@ -68,11 +68,9 @@ export default function JournalFormPage() {
     setSubmitting(true);
 
     try {
-      // Clean and validate data before sending
       const journalData = {
         destinationId: formData.destinationId,
-        userId: 1, // Default user ID
-        title: formData.title || 'Untitled Journal',
+        title: formData.title || 'Untitled',
         content: formData.content || '',
         visitDate: formData.visitDate || new Date().toISOString().split('T')[0],
         rating: parseInt(formData.rating) || 5,
@@ -82,8 +80,8 @@ export default function JournalFormPage() {
           : (Array.isArray(formData.highlights) ? formData.highlights : []),
         isPublic: Boolean(formData.isPublic)
       };
-
-      console.log('Submitting journal data:', journalData);
+      
+      console.log('Submitting journal:', journalData);
 
       if (isEditing) {
         await updateJournal(id, journalData);
@@ -94,8 +92,9 @@ export default function JournalFormPage() {
       navigate('/journals');
     } catch (error) {
       console.error('Error saving journal:', error);
-      console.error('Error details:', error.response?.data);
-      alert('Failed to save journal: ' + (error.response?.data?.details || error.message));
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.details || error.response?.data?.error || error.message;
+      alert('Failed to save journal: ' + errorMessage);
     } finally {
       setSubmitting(false);
     }

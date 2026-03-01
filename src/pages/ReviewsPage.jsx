@@ -47,17 +47,23 @@ export default function ReviewsPage() {
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     
-    if (!formData.destinationId || !formData.userName || !formData.content) {
-      alert('Please fill in all required fields');
+    if (!formData.destinationId || !formData.content) {
+      alert('Please select a destination and write your review');
       return;
     }
 
     try {
       setSubmitting(true);
-      const newReview = await createReview({
-        ...formData,
-        rating: parseInt(formData.rating)
-      });
+      
+      const reviewData = {
+        destinationId: formData.destinationId,
+        rating: parseInt(formData.rating) || 5,
+        content: formData.content,
+        title: formData.userName ? `Review by ${formData.userName}` : 'Anonymous Review'
+      };
+      
+      console.log('Submitting review:', reviewData);
+      const newReview = await createReview(reviewData);
       
       setReviews([newReview, ...reviews]);
       setShowModal(false);
@@ -69,7 +75,9 @@ export default function ReviewsPage() {
       });
     } catch (err) {
       console.error('Error creating review:', err);
-      alert('Failed to create review. Please try again.');
+      console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.details || err.response?.data?.error || err.message;
+      alert('Failed to create review: ' + errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -134,6 +142,10 @@ export default function ReviewsPage() {
           <div className="space-y-6">
             {filteredReviews.map((review) => {
               const destination = destinations.find(d => d.id === review.destinationId);
+              // Extract userName from title if it exists (format: "Review by Name")
+              const displayName = review.title?.startsWith('Review by ') 
+                ? review.title.replace('Review by ', '') 
+                : review.title || 'Anonymous Traveler';
               
               return (
                 <div key={review.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -141,11 +153,11 @@ export default function ReviewsPage() {
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
                         <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
-                          {review.userName?.[0]?.toUpperCase() || 'U'}
+                          {displayName[0]?.toUpperCase() || 'A'}
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-800">
-                            {review.userName || 'Anonymous Traveler'}
+                            {displayName}
                           </h3>
                           <p className="text-sm text-gray-500">
                             {new Date(review.createdAt).toLocaleDateString('en-US', {
