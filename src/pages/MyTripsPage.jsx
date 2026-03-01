@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getAllTrips, deleteTrip } from '../services/tripsService';
 import Loading from '../components/Loading';
 
 export default function MyTripsPage() {
+  const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -130,7 +131,7 @@ export default function MyTripsPage() {
                       onClick={() => {
                         // Load this trip into the trip planner
                         localStorage.setItem('tripItinerary', JSON.stringify(trip));
-                        window.location.href = '/trip-planner';
+                        navigate('/trip-planner');
                       }}
                       className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition"
                     >
@@ -148,12 +149,16 @@ export default function MyTripsPage() {
 
                 {/* Footer */}
                 <div className="bg-gray-50 px-4 py-2 flex items-center justify-between text-xs">
-                  <Link 
-                    to="/budget"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  <button
+                    onClick={() => {
+                      // Load this trip into localStorage for budget calculation
+                      localStorage.setItem('tripItinerary', JSON.stringify(trip));
+                      navigate('/budget');
+                    }}
+                    className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
                   >
                     💰 View Budget
-                  </Link>
+                  </button>
                   <span className="text-gray-500">
                     Last updated: {new Date(trip.updatedAt).toLocaleDateString()}
                   </span>

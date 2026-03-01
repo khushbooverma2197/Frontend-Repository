@@ -70,6 +70,7 @@ export default function TripPlannerPage() {
           id: destination.id,
           name: destination.name,
           country: destination.country,
+          avg_daily_cost: destination.avg_daily_cost || destination.avgDailyCost || 0,
           days: 3,
           order: itinerary.destinations.length
         }]
@@ -122,12 +123,28 @@ export default function TripPlannerPage() {
 
     setSaving(true);
     try {
-      const savedTrip = saveTrip(itinerary);
+      // Ensure all destinations have cost data before saving
+      const enrichedItinerary = {
+        ...itinerary,
+        destinations: itinerary.destinations.map(dest => {
+          const fullDest = favorites.find(f => f.id === dest.id);
+          return {
+            ...dest,
+            avg_daily_cost: dest.avg_daily_cost || fullDest?.avg_daily_cost || 0
+          };
+        })
+      };
+      
+      const savedTrip = saveTrip(enrichedItinerary);
       alert(`Trip "${savedTrip.name}" saved successfully!`);
       
-      // Clear current itinerary and navigate to My Trips
-      localStorage.removeItem('tripItinerary');
+      // Navigate to My Trips (keep itinerary in localStorage for now)
       navigate('/my-trips');
+      
+      // Clear itinerary after navigation
+      setTimeout(() => {
+        localStorage.removeItem('tripItinerary');
+      }, 100);
     } catch (error) {
       console.error('Error saving trip:', error);
       alert('Failed to save trip. Please try again.');
@@ -161,24 +178,32 @@ export default function TripPlannerPage() {
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {favorites.map(destination => (
-                    <div key={destination.id} className="border rounded-lg p-3 hover:shadow-md transition">
-                      <div className="flex items-center gap-3 mb-2">
-                        {destination.images && destination.images[0] && (
+                  {favorites.map(destination => {
+                    const imageUrl = (destination.images && destination.images.length > 0) 
+                      ? destination.images[0] 
+                      : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800';
+                    const fallbackImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800';
+                    
+                    return (
+                      <div key={destination.id} className="border rounded-lg p-3 hover:shadow-md transition">
+                        <div className="flex items-center gap-3 mb-2">
                           <img
-                            src={destination.images[0]}
+                            src={imageUrl}
                             alt={destination.name}
-                            className="w-16 h-16 object-cover rounded"
+                            onError={(e) => {
+                              console.error(`Image failed to load for ${destination.name}`);
+                              e.target.src = fallbackImage;
+                            }}
+                            className="w-16 h-16 object-cover rounded bg-gray-200"
                           />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{destination.name}</h3>
-                          <p className="text-xs text-gray-500">{destination.country}</p>
-                          <p className="text-xs text-blue-600 font-medium">
-                            ${Math.round(destination.avg_daily_cost)}/day
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm truncate">{destination.name}</h3>
+                            <p className="text-xs text-gray-500">{destination.country}</p>
+                            <p className="text-xs text-blue-600 font-medium">
+                              ${Math.round(destination.avg_daily_cost)}/day
+                            </p>
+                          </div>
                         </div>
-                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => addToItinerary(destination)}
@@ -194,7 +219,8 @@ export default function TripPlannerPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>
