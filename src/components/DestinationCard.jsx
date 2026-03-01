@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { isFavorite, addToFavorites, removeFromFavorites } from '../services/favoritesService';
 
 export default function DestinationCard({ destination }) {
   const {
@@ -14,6 +15,11 @@ export default function DestinationCard({ destination }) {
   } = destination;
 
   const [imageError, setImageError] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+
+  useEffect(() => {
+    setFavorite(isFavorite(id));
+  }, [id]);
 
   // Debug logging for image issues
   if (!images || images.length === 0) {
@@ -31,6 +37,18 @@ export default function DestinationCard({ destination }) {
     setImageError(true);
   };
 
+  const toggleFavorite = (e) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation();
+    if (favorite) {
+      removeFromFavorites(id);
+      setFavorite(false);
+    } else {
+      addToFavorites(destination);
+      setFavorite(true);
+    }
+  };
+
   return (
     <Link to={`/destination/${id}`} className="group">
       <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -43,6 +61,16 @@ export default function DestinationCard({ destination }) {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             loading="lazy"
           />
+          {/* Favorite Button */}
+          <button
+            onClick={toggleFavorite}
+            className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+            title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <span className={`text-2xl ${favorite ? 'text-red-500' : 'text-gray-400'}`}>
+              {favorite ? '❤️' : '🤍'}
+            </span>
+          </button>
         </div>
 
         {/* Content */}

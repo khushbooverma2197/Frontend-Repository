@@ -21,14 +21,26 @@ export default function Navigation() {
             <Link to="/" className="hover:text-blue-200 transition">
               Destinations
             </Link>
+            <Link to="/trip-planner" className="hover:text-blue-200 transition flex items-center gap-1">
+              <span>🗺️</span> Trip Planner
+            </Link>
+            <Link to="/my-trips" className="hover:text-blue-200 transition flex items-center gap-1">
+              <span>📋</span> My Trips
+            </Link>
+            <Link to="/deals" className="hover:text-blue-200 transition flex items-center gap-1">
+              <span>🔥</span> Deals
+            </Link>
             <Link to="/budget" className="hover:text-blue-200 transition">
               Budget Planner
             </Link>
             <Link to="/journals" className="hover:text-blue-200 transition">
               My Journals
             </Link>
-            <Link to="/reviews" className="hover:text-blue-200 transition">
-              Reviews
+            <Link to="/community" className="hover:text-blue-200 transition flex items-center gap-1">
+              <span>👥</span> Community
+            </Link>
+            <Link to="/preferences" className="hover:text-blue-200 transition flex items-center gap-1">
+              <span>⚙️</span> Preferences
             </Link>
           </div>
 
@@ -53,14 +65,26 @@ export default function Navigation() {
             <Link to="/" className="block py-2 hover:bg-blue-700 px-4 rounded">
               Destinations
             </Link>
+            <Link to="/trip-planner" className="block py-2 hover:bg-blue-700 px-4 rounded">
+              🗺️ Trip Planner
+            </Link>
+            <Link to="/my-trips" className="block py-2 hover:bg-blue-700 px-4 rounded">
+              📋 My Trips
+            </Link>
+            <Link to="/deals" className="block py-2 hover:bg-blue-700 px-4 rounded">
+              🔥 Deals
+            </Link>
             <Link to="/budget" className="block py-2 hover:bg-blue-700 px-4 rounded">
               Budget Planner
             </Link>
             <Link to="/journals" className="block py-2 hover:bg-blue-700 px-4 rounded">
               My Journals
             </Link>
-            <Link to="/reviews" className="block py-2 hover:bg-blue-700 px-4 rounded">
-              Reviews
+            <Link to="/community" className="block py-2 hover:bg-blue-700 px-4 rounded">
+              👥 Community
+            </Link>
+            <Link to="/preferences" className="block py-2 hover:bg-blue-700 px-4 rounded">
+              ⚙️ Preferences
             </Link>
           </div>
         )}
