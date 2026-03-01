@@ -45,6 +45,7 @@ export default function FilterPanel({ onFilterChange }) {
   const handleBudgetChange = (field, value) => {
     const newFilters = { ...filters, [field]: value };
     setFilters(newFilters);
+    // Trigger filter change immediately, even if value is empty
     onFilterChange(newFilters);
   };
 
