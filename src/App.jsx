@@ -7,6 +7,11 @@ import JournalsPage from './pages/JournalsPage';
 import JournalFormPage from './pages/JournalFormPage';
 import JournalDetailPage from './pages/JournalDetailPage';
 import ReviewsPage from './pages/ReviewsPage';
+import PreferencesPage from './pages/PreferencesPage';
+import TripPlannerPage from './pages/TripPlannerPage';
+import MyTripsPage from './pages/MyTripsPage';
+import DealsPage from './pages/DealsPage';
+import CommunityPage from './pages/CommunityPage';
 
 function App() {
   return (
@@ -22,6 +27,11 @@ function App() {
           <Route path="/journals/:id" element={<JournalDetailPage />} />
           <Route path="/journals/:id/edit" element={<JournalFormPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/preferences" element={<PreferencesPage />} />
+          <Route path="/trip-planner" element={<TripPlannerPage />} />
+          <Route path="/my-trips" element={<MyTripsPage />} />
+          <Route path="/deals" element={<DealsPage />} />
+          <Route path="/community" element={<CommunityPage />} />
         </Routes>
       </div>
     </Router>
