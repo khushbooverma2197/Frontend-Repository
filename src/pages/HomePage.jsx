@@ -1,12 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import FilterPanel from '../components/FilterPanel';
 import DestinationList from '../components/DestinationList';
+import DestinationCard from '../components/DestinationCard';
+import { getAllDestinations } from '../services/destinationService';
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({});
   const [showFilters, setShowFilters] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [userPreferences, setUserPreferences] = useState(null);
+
+  useEffect(() => {
+    // Load user preferences from localStorage
+    const savedPreferences = localStorage.getItem('userPreferences');
+    if (savedPreferences) {
+      const prefs = JSON.parse(savedPreferences);
+      setUserPreferences(prefs);
+      
+      // Fetch and filter destinations based on preferences
+      const fetchRecommendations = async () => {
+        try {
+          const allDestinations = await getAllDestinations();
+          
+          // Filter destinations that match user interests
+          const matching = allDestinations.filter(dest => {
+            if (!dest.interests || !prefs.interests) return false;
+            
+            // Check if destination has at least one matching interest
+            return prefs.interests.some(userInterest => 
+              dest.interests.includes(userInterest)
+            );
+          });
+          
+          // Further filter by budget if specified
+          if (prefs.budgetRange) {
+            const budgetFiltered = matching.filter(dest => {
+              if (!dest.avg_daily_cost) return true;
+              
+              switch (prefs.budgetRange) {
+                case 'budget':
+                  return dest.avg_daily_cost < 100;
+                case 'moderate':
+                  return dest.avg_daily_cost >= 100 && dest.avg_daily_cost <= 200;
+                case 'luxury':
+                  return dest.avg_daily_cost > 200;
+                default:
+                  return true;
+              }
+            });
+            
+            setRecommendations(budgetFiltered.slice(0, 6)); // Show top 6
+          } else {
+            setRecommendations(matching.slice(0, 6));
+          }
+        } catch (error) {
+          console.error('Error fetching recommendations:', error);
+        }
+      };
+      
+      fetchRecommendations();
+    }
+  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -36,6 +93,47 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Personalized Recommendations */}
+      {userPreferences && recommendations.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                  <span>✨</span> Recommended For You
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Based on your preferences: {userPreferences.interests?.join(', ')}
+                </p>
+              </div>
+              <Link 
+                to="/preferences"
+                className="px-4 py-2 text-sm bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition font-medium"
+              >
+                ⚙️ Update Preferences
+              </Link>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommendations.map(destination => (
+                <DestinationCard key={destination.id} destination={destination} />
+              ))}
+            </div>
+
+            {recommendations.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No recommendations found. Try updating your preferences!</p>
+                <Link to="/preferences">
+                  <button className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition">
+                    Set Your Preferences
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

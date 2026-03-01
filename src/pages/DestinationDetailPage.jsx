@@ -5,6 +5,8 @@ import { getReviewsByDestination } from '../services/reviewService';
 import Loading from '../components/Loading';
 import ErrorDisplay from '../components/ErrorDisplay';
 import PrimaryButton from '../components/PrimaryButton';
+import SocialShareButtons from '../components/SocialShareButtons';
+import { isFavorite, addToFavorites, removeFromFavorites } from '../services/favoritesService';
 
 export default function DestinationDetailPage() {
   const { id } = useParams();
@@ -13,6 +15,11 @@ export default function DestinationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [favorite, setFavorite] = useState(false);
+
+  useEffect(() => {
+    setFavorite(isFavorite(id));
+  }, [id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +44,16 @@ export default function DestinationDetailPage() {
 
     fetchData();
   }, [id]);
+
+  const toggleFavorite = () => {
+    if (favorite) {
+      removeFromFavorites(id);
+      setFavorite(false);
+    } else {
+      addToFavorites(destination);
+      setFavorite(true);
+    }
+  };
 
   if (loading) return <Loading />;
   if (error) return <ErrorDisplay message={error} />;
@@ -116,6 +133,16 @@ export default function DestinationDetailPage() {
                 >
                   Reviews ({reviews.length})
                 </button>
+                <button
+                  onClick={() => setActiveTab('share')}
+                  className={`flex-1 px-6 py-4 font-semibold ${
+                    activeTab === 'share'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Share
+                </button>
               </div>
 
               <div className="p-6">
@@ -192,6 +219,18 @@ export default function DestinationDetailPage() {
                     )}
                   </div>
                 )}
+
+                {activeTab === 'share' && (
+                  <div>
+                    <SocialShareButtons destination={destination} />
+                    <div className="mt-8 p-6 bg-blue-50 rounded-lg">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">💡 Why Share?</h3>
+                      <p className="text-gray-700">
+                        Help your friends discover this amazing destination! Share your travel inspiration and start planning adventures together.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -216,6 +255,16 @@ export default function DestinationDetailPage() {
               )}
 
               <div className="space-y-3">
+                <button
+                  onClick={toggleFavorite}
+                  className={`w-full px-6 py-3 font-bold rounded-lg transition-all ${
+                    favorite
+                      ? 'bg-red-50 text-red-600 border-2 border-red-600 hover:bg-red-100'
+                      : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-red-600 hover:text-red-600'
+                  }`}
+                >
+                  {favorite ? '❤️ Saved to Favorites' : '🤍 Add to Favorites'}
+                </button>
                 <Link to={`/budget?destination=${id}`}>
                   <PrimaryButton fullWidth>
                     Calculate Budget
