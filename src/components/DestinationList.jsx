@@ -56,16 +56,15 @@ export default function DestinationList({ filters = {}, searchQuery = '' }) {
       }
       
       // Apply filters locally
-      if (filters.type) {
-        // Map filter type to database interests
-        const requiredInterests = TYPE_TO_INTERESTS[filters.type] || [];
-        console.log('Filtering by type:', filters.type, '-> interests:', requiredInterests);
-        data = data.filter(d => 
-          d.interests && requiredInterests.some(reqInterest =>
-            d.interests.some(interest => interest.toLowerCase() === reqInterest.toLowerCase())
-          )
+      if (filters.type && filters.type.length > 0) {
+        data = data.filter(d =>
+          filters.type.some(selectedType => {
+            const requiredInterests = TYPE_TO_INTERESTS[selectedType] || [];
+            return d.interests && requiredInterests.some(reqInterest =>
+              d.interests.some(interest => interest.toLowerCase() === reqInterest.toLowerCase())
+            );
+          })
         );
-        console.log('After type filter:', data.length);
       }
       
       if (filters.minBudget && filters.minBudget !== '') {
@@ -105,7 +104,7 @@ export default function DestinationList({ filters = {}, searchQuery = '' }) {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, filters.type, filters.minBudget, filters.maxBudget, JSON.stringify(filters.activities)]);
+  }, [searchQuery, JSON.stringify(filters.type), filters.minBudget, filters.maxBudget, JSON.stringify(filters.activities)]);
 
   useEffect(() => {
     fetchDestinations();
@@ -130,7 +129,7 @@ export default function DestinationList({ filters = {}, searchQuery = '' }) {
   return (
     <div className="space-y-6">
       {/* Active Search & Filters Summary */}
-      {(searchQuery || filters.type || filters.minBudget || filters.maxBudget || (filters.activities && filters.activities.length > 0)) && (
+      {(searchQuery || (filters.type && filters.type.length > 0) || filters.minBudget || filters.maxBudget || (filters.activities && filters.activities.length > 0)) && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800 font-medium mb-2">
             {searchQuery ? 'Search Results & Filters:' : 'Active Filters:'}
@@ -141,11 +140,11 @@ export default function DestinationList({ filters = {}, searchQuery = '' }) {
                 Search: "{searchQuery}"
               </span>
             )}
-            {filters.type && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                Type: {filters.type}
+            {filters.type && filters.type.map(t => (
+              <span key={t} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                Type: {t}
               </span>
-            )}
+            ))}
             {filters.minBudget && (
               <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                 Min: ${filters.minBudget}

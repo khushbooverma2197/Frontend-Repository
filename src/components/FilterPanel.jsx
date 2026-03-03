@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 export default function FilterPanel({ onFilterChange }) {
   const [filters, setFilters] = useState({
-    type: '',
+    type: [],
     minBudget: '',
     maxBudget: '',
     activities: []
@@ -27,7 +27,10 @@ export default function FilterPanel({ onFilterChange }) {
   ];
 
   const handleTypeChange = (type) => {
-    const newFilters = { ...filters, type: filters.type === type ? '' : type };
+    const newTypes = filters.type.includes(type)
+      ? filters.type.filter(t => t !== type)
+      : [...filters.type, type];
+    const newFilters = { ...filters, type: newTypes };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -50,74 +53,88 @@ export default function FilterPanel({ onFilterChange }) {
   };
 
   const clearFilters = () => {
-    const clearedFilters = { type: '', minBudget: '', maxBudget: '', activities: [] };
+    const clearedFilters = { type: [], minBudget: '', maxBudget: '', activities: [] };
     setFilters(clearedFilters);
     onFilterChange(clearedFilters);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-5">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Filters</h3>
         <button
           onClick={clearFilters}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-xs font-medium text-blue-600 hover:text-blue-700 transition"
         >
-          Clear All
+          Clear all
         </button>
       </div>
 
       {/* Destination Type */}
       <div>
-        <h4 className="font-medium text-gray-700 mb-3">Destination Type</h4>
-        <div className="space-y-2">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Type</h4>
+        <div className="space-y-0.5">
           {destinationTypes.map((type) => (
-            <label key={type} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+            <label key={type} className="flex items-center gap-2.5 cursor-pointer hover:bg-gray-50 px-2 py-2 rounded-lg transition group">
+              <div
+                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition flex-shrink-0
+                  ${filters.type.includes(type) ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}
+              >
+                {filters.type.includes(type) && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
               <input
                 type="checkbox"
-                checked={filters.type === type}
+                checked={filters.type.includes(type)}
                 onChange={() => handleTypeChange(type)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="sr-only"
               />
-              <span className="ml-2 text-gray-700">{type}</span>
+              <span className="text-sm text-gray-700 select-none">{type}</span>
             </label>
           ))}
         </div>
       </div>
 
+      <hr className="border-gray-100" />
+
       {/* Budget Range */}
       <div>
-        <h4 className="font-medium text-gray-700 mb-3">Budget Range (USD)</h4>
-        <div className="space-y-3">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Budget / Day (USD)</h4>
+        <div className="flex gap-2">
           <input
             type="number"
-            placeholder="Min Budget"
+            placeholder="Min"
             value={filters.minBudget}
             onChange={(e) => handleBudgetChange('minBudget', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <input
             type="number"
-            placeholder="Max Budget"
+            placeholder="Max"
             value={filters.maxBudget}
             onChange={(e) => handleBudgetChange('maxBudget', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
 
+      <hr className="border-gray-100" />
+
       {/* Activities */}
       <div>
-        <h4 className="font-medium text-gray-700 mb-3">Activities</h4>
-        <div className="flex flex-wrap gap-2">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5">Activities</h4>
+        <div className="flex flex-wrap gap-1.5">
           {popularActivities.map((activity) => (
             <button
               key={activity}
               onClick={() => handleActivityToggle(activity)}
-              className={`px-3 py-1 rounded-full text-sm transition ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition ${
                 filters.activities.includes(activity)
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {activity}
