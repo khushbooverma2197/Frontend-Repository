@@ -26,6 +26,7 @@ export default function JournalFormPage() {
     highlights: '',
     isPublic: false
   });
+  const [uploadError, setUploadError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +61,44 @@ export default function JournalFormPage() {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setUploadError('');
+
+    const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
+    if (oversized.length > 0) {
+      setUploadError('Some images exceed 5 MB and were skipped.');
+    }
+
+    const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024);
+    const totalAfter = formData.photos.length + validFiles.length;
+    if (totalAfter > 6) {
+      setUploadError('Maximum 6 photos allowed per journal entry.');
+      return;
+    }
+
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setFormData(prev => ({
+          ...prev,
+          photos: [...prev.photos, ev.target.result]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input so the same file can be re-added if removed
+    e.target.value = '';
+  };
+
+  const removePhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
     }));
   };
 
@@ -176,6 +215,67 @@ export default function JournalFormPage() {
                 placeholder="Share your travel story, experiences, and memories..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+
+            {/* Photo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Photos
+                <span className="ml-2 text-xs font-normal text-gray-400">Up to 6 images, max 5 MB each</span>
+              </label>
+
+              {/* Upload zone */}
+              <label
+                htmlFor="photo-upload"
+                className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-colors group"
+              >
+                <svg className="w-10 h-10 text-gray-400 group-hover:text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm text-gray-500 group-hover:text-blue-600 font-medium">Click to browse images from your PC</span>
+                <span className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP, GIF supported</span>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </label>
+
+              {uploadError && (
+                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  {uploadError}
+                </p>
+              )}
+
+              {/* Preview grid */}
+              {formData.photos.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
+                  {formData.photos.map((photo, index) => (
+                    <div key={index} className="relative group aspect-square">
+                      <img
+                        src={photo}
+                        alt={`Photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-xl border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(index)}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                        title="Remove photo"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                      {index === 0 && (
+                        <span className="absolute bottom-1.5 left-1.5 text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-md font-medium">Cover</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Highlights */}

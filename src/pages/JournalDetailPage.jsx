@@ -72,7 +72,7 @@ export default function JournalDetailPage() {
         </Link>
 
         {/* Journal Header */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
           {journal.photos && journal.photos.length > 0 && (
             <div className="w-full h-96 overflow-hidden">
               <img
@@ -182,19 +182,34 @@ export default function JournalDetailPage() {
             )}
 
             {/* Photo Gallery */}
-            {journal.photos && journal.photos.length > 1 && (
+            {journal.photos && journal.photos.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  📸 Photo Gallery
+                <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  Photos
+                  <span className="text-xs font-normal text-gray-400">{journal.photos.length} image{journal.photos.length !== 1 ? 's' : ''}</span>
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {journal.photos.slice(1).map((photo, index) => (
-                    <img
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {journal.photos.map((photo, index) => (
+                    <a
                       key={index}
-                      src={photo}
-                      alt={`${journal.title} - Photo ${index + 2}`}
-                      className="w-full h-48 object-cover rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
-                    />
+                      href={photo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative group block aspect-square"
+                    >
+                      <img
+                        src={photo}
+                        alt={`${journal.title} - Photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-xl border border-gray-100 group-hover:opacity-90 transition-opacity"
+                      />
+                      {index === 0 && (
+                        <span className="absolute top-2 left-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-md font-medium">Cover</span>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg className="w-7 h-7 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                      </div>
+                    </a>
                   ))}
                 </div>
               </div>

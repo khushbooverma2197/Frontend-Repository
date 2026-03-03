@@ -30,6 +30,7 @@ export default function PreferencesPage() {
       preferredSeasons: []
     };
   });
+  const [saved, setSaved] = useState(false);
 
   const toggleInterest = (interestId) => {
     setPreferences(prev => ({
@@ -43,8 +44,10 @@ export default function PreferencesPage() {
   const handleSave = () => {
     localStorage.setItem('userPreferences', JSON.stringify(preferences));
     localStorage.setItem('preferencesSet', 'true');
-    alert('Preferences saved! You\'ll now see personalized recommendations.');
-    navigate('/');
+    setSaved(true);
+    setTimeout(() => {
+      navigate('/');
+    }, 1200);
   };
 
   const handleSkip = () => {
@@ -52,18 +55,26 @@ export default function PreferencesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Success Banner */}
+        {saved && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg text-sm font-medium">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            Preferences saved! Redirecting...
+          </div>
+        )}
+
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
             Personalize Your Travel Experience
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-gray-500">
             Tell us about your preferences to get tailored destination recommendations
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-8 space-y-10">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-10">
           {/* Interests Section */}
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -75,7 +86,7 @@ export default function PreferencesPage() {
                 <button
                   key={interest.id}
                   onClick={() => toggleInterest(interest.id)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  className={`p-4 rounded-xl border-2 transition-all text-left ${
                     preferences.interests.includes(interest.id)
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -107,8 +118,8 @@ export default function PreferencesPage() {
               {BUDGET_RANGES.map(budget => (
                 <button
                   key={budget.id}
-                  onClick={() => setPreferences(prev => ({ ...prev, budget: budget.id }))}
-                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                  onClick={() => setPreferences(prev => ({ ...prev, budget: prev.budget === budget.id ? '' : budget.id }))}
+                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                     preferences.budget === budget.id
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -144,8 +155,8 @@ export default function PreferencesPage() {
               ].map(type => (
                 <button
                   key={type.id}
-                  onClick={() => setPreferences(prev => ({ ...prev, travelerType: type.id }))}
-                  className={`p-4 rounded-lg border-2 transition-all ${
+                  onClick={() => setPreferences(prev => ({ ...prev, travelerType: prev.travelerType === type.id ? '' : type.id }))}
+                  className={`p-4 rounded-xl border-2 transition-all ${
                     preferences.travelerType === type.id
                       ? 'border-blue-600 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -162,13 +173,12 @@ export default function PreferencesPage() {
           <div className="flex gap-4 pt-6">
             <button
               onClick={handleSkip}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 px-6 py-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition"
             >
               Skip for Now
             </button>
             <PrimaryButton
               onClick={handleSave}
-              disabled={preferences.interests.length === 0}
               className="flex-1"
             >
               Save Preferences

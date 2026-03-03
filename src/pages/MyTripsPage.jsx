@@ -7,6 +7,7 @@ export default function MyTripsPage() {
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tripToDelete, setTripToDelete] = useState(null);
 
   useEffect(() => {
     loadTrips();
@@ -24,9 +25,14 @@ export default function MyTripsPage() {
   };
 
   const handleDeleteTrip = (tripId, tripName) => {
-    if (confirm(`Are you sure you want to delete "${tripName}"?`)) {
-      deleteTrip(tripId);
-      setTrips(trips.filter(t => t.id !== tripId));
+    setTripToDelete({ id: tripId, name: tripName });
+  };
+
+  const confirmDelete = () => {
+    if (tripToDelete) {
+      deleteTrip(tripToDelete.id);
+      setTrips(trips.filter(t => t.id !== tripToDelete.id));
+      setTripToDelete(null);
     }
   };
 
@@ -37,16 +43,42 @@ export default function MyTripsPage() {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Delete Confirmation Modal */}
+        {tripToDelete && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Trip?</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to delete <span className="font-semibold text-gray-800">"{tripToDelete.name}"</span>? This cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setTripToDelete(null)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition text-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">📋 My Trips</h1>
-            <p className="text-gray-600">View and manage your saved trip plans</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">My Trips</h1>
+            <p className="text-gray-500 text-sm">View and manage your saved trip plans</p>
           </div>
           <Link to="/trip-planner">
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition">
+            <button className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-sm">
               + Create New Trip
             </button>
           </Link>
@@ -54,14 +86,14 @@ export default function MyTripsPage() {
 
         {/* Trips List */}
         {trips.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
             <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
             <h3 className="text-2xl font-bold text-gray-700 mb-2">No saved trips yet</h3>
             <p className="text-gray-500 mb-6">Start planning your next adventure!</p>
             <Link to="/trip-planner">
-              <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition">
+              <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
                 Create Your First Trip
               </button>
             </Link>
@@ -69,7 +101,7 @@ export default function MyTripsPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map(trip => (
-              <div key={trip.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+              <div key={trip.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md overflow-hidden transition-all duration-200">
                 {/* Trip Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
                   <h2 className="text-xl font-bold mb-1">{trip.name}</h2>
@@ -129,20 +161,19 @@ export default function MyTripsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        // Load this trip into the trip planner
                         localStorage.setItem('tripItinerary', JSON.stringify(trip));
                         navigate('/trip-planner');
                       }}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition"
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDeleteTrip(trip.id, trip.name)}
-                      className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded hover:bg-red-100 transition"
+                      className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-xl hover:bg-red-100 transition border border-red-100"
                       title="Delete trip"
                     >
-                      🗑️
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                   </div>
                 </div>
@@ -171,19 +202,19 @@ export default function MyTripsPage() {
         {/* Quick Stats */}
         {trips.length > 0 && (
           <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
               <div className="text-4xl mb-2">🗺️</div>
               <div className="text-3xl font-bold text-blue-600">{trips.length}</div>
               <div className="text-sm text-gray-600">Total Trips</div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
               <div className="text-4xl mb-2">📍</div>
               <div className="text-3xl font-bold text-purple-600">
                 {trips.reduce((sum, trip) => sum + (trip.destinations?.length || 0), 0)}
               </div>
               <div className="text-sm text-gray-600">Destinations to Visit</div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 text-center">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
               <div className="text-4xl mb-2">📅</div>
               <div className="text-3xl font-bold text-green-600">
                 {trips.reduce((sum, trip) => sum + calculateTotalDays(trip.destinations), 0)}

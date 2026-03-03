@@ -7,6 +7,7 @@ export default function CommunityPage() {
   const [publicJournals, setPublicJournals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('recent');
+  const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
     const fetchJournals = async () => {
@@ -61,20 +62,21 @@ export default function CommunityPage() {
   const copyLink = (journalId) => {
     const url = `${window.location.origin}/journals/${journalId}`;
     navigator.clipboard.writeText(url);
-    alert('Link copied to clipboard!');
+    setCopiedId(journalId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            🌍 Travel Community
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
+            Travel Community
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-gray-500">
             Share your adventures and get inspired by fellow travelers
           </p>
         </div>
@@ -84,28 +86,28 @@ export default function CommunityPage() {
           <div className="flex gap-3">
             <button
               onClick={() => setFilter('recent')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
+              className={`px-5 py-2 rounded-full font-semibold transition-all text-sm ${
                 filter === 'recent'
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 hover:shadow-md'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
-              🕒 Recent
+              Recent
             </button>
             <button
               onClick={() => setFilter('rating')}
-              className={`px-6 py-2 rounded-full font-semibold transition-all ${
+              className={`px-5 py-2 rounded-full font-semibold transition-all text-sm ${
                 filter === 'rating'
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 hover:shadow-md'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
-              ⭐ Top Rated
+              Top Rated
             </button>
           </div>
           
           <Link to="/journals/new">
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition-all">
+            <button className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all text-sm">
               + Share Your Story
             </button>
           </Link>
@@ -119,7 +121,7 @@ export default function CommunityPage() {
             { label: 'Photos Shared', value: publicJournals.reduce((sum, j) => sum + (j.photos?.length || 0), 0), icon: '📸' },
             { label: 'Active Travelers', value: Math.ceil(publicJournals.length / 2), icon: '👥' }
           ].map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-md p-6 text-center">
+            <div key={index} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
               <div className="text-4xl mb-2">{stat.icon}</div>
               <div className="text-3xl font-bold text-gray-800">{stat.value}</div>
               <div className="text-sm text-gray-600">{stat.label}</div>
@@ -129,14 +131,14 @@ export default function CommunityPage() {
 
         {/* Journal Feed */}
         {sortedJournals.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
             <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h3 className="text-2xl font-bold text-gray-700 mb-2">No public stories yet</h3>
             <p className="text-gray-500 mb-6">Be the first to share your travel experience!</p>
             <Link to="/journals/new">
-              <button className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full hover:shadow-lg transition">
+              <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
                 Share Your Story
               </button>
             </Link>
@@ -144,20 +146,32 @@ export default function CommunityPage() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedJournals.map(journal => (
-              <div key={journal.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+              <div key={journal.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md overflow-hidden transition-all duration-200">
                 {/* Journal Image */}
-                {journal.photos && journal.photos.length > 0 && (
-                  <Link to={`/journals/${journal.id}`}>
-                    <div className="relative h-56 overflow-hidden group">
-                      <img
-                        src={journal.photos[0]}
-                        alt={journal.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </Link>
-                )}
+                <Link to={`/journals/${journal.id}`}>
+                  <div className="relative h-52 overflow-hidden group bg-gradient-to-br from-blue-50 to-purple-50">
+                    {journal.photos && journal.photos.length > 0 ? (
+                      <>
+                        <img
+                          src={journal.photos[0]}
+                          alt={journal.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {journal.photos.length > 1 && (
+                          <span className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-1 rounded-lg">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            {journal.photos.length}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg className="w-14 h-14 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      </div>
+                    )}
+                  </div>
+                </Link>
                 
                 {/* Journal Content */}
                 <div className="p-6">
@@ -232,10 +246,14 @@ export default function CommunityPage() {
                     </button>
                     <button
                       onClick={() => copyLink(journal.id)}
-                      className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                      className={`p-2 rounded-lg transition text-xs font-medium ${
+                        copiedId === journal.id
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                       title="Copy link"
                     >
-                      🔗
+                      {copiedId === journal.id ? '✓' : '🔗'}
                     </button>
                   </div>
                 </div>
@@ -245,7 +263,7 @@ export default function CommunityPage() {
         )}
 
         {/* Call to Action */}
-        <div className="mt-16 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 rounded-2xl p-12 text-center text-white">
+        <div className="mt-16 bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl p-12 text-center text-white">
           <h2 className="text-4xl font-bold mb-4">Join Our Travel Community</h2>
           <p className="text-lg mb-6">Share your experiences, inspire others, and discover amazing destinations</p>
           <div className="flex justify-center gap-4">

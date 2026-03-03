@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getFavorites, removeFromFavorites } from '../services/favoritesService';
 import { getDestinationById } from '../services/destinationService';
+import { calculateBudget } from '../services/destinationService';
 import { saveTrip } from '../services/tripsService';
 import PrimaryButton from '../components/PrimaryButton';
 import Loading from '../components/Loading';
@@ -22,10 +23,62 @@ export default function TripPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [numberOfPeople, setNumberOfPeople] = useState(2);
+  const [accommodationType, setAccommodationType] = useState('mid-range');
+  const [tripBudgetData, setTripBudgetData] = useState(null);
+  const [budgetCalculating, setBudgetCalculating] = useState(false);
 
   useEffect(() => {
     loadFavorites();
   }, []);
+
+  // Recalculate budget whenever destinations or people count changes
+  useEffect(() => {
+    if (itinerary.destinations.length === 0) {
+      setTripBudgetData(null);
+      return;
+    }
+    const recalculate = async () => {
+      setBudgetCalculating(true);
+      try {
+        let total = 0;
+        const destBudgets = {};
+        for (let i = 0; i < itinerary.destinations.length; i++) {
+          const dest = itinerary.destinations[i];
+          try {
+            const result = await calculateBudget({
+              destinationId: dest.id,
+              days: dest.days || 3,
+              people: numberOfPeople,
+              accommodationType: accommodationType,
+              includeFlight: i === 0, // actual flight cost from DB for first destination only
+            });
+            destBudgets[dest.id] = result;
+            total += result.total || 0;
+          } catch {
+            const fallback = Math.round((dest.avg_daily_cost || 100) * (dest.days || 3) * numberOfPeople);
+            destBudgets[dest.id] = { total: fallback, breakdown: {} };
+            total += fallback;
+          }
+        }
+        // Add inter-destination transport (regional flights/trains between destinations)
+        const interDestTransport =
+          itinerary.destinations.length > 1
+            ? (itinerary.destinations.length - 1) * 250 * numberOfPeople
+            : 0;
+        total += interDestTransport;
+        setTripBudgetData({
+          total: Math.round(total),
+          perPerson: Math.round(total / numberOfPeople),
+          interDestTransport,
+          destBudgets,
+        });
+      } finally {
+        setBudgetCalculating(false);
+      }
+    };
+    recalculate();
+  }, [itinerary.destinations, numberOfPeople, accommodationType]);
 
   const loadFavorites = async () => {
     try {
@@ -102,17 +155,6 @@ export default function TripPlannerPage() {
 
   const calculateTotalDays = () => {
     return itinerary.destinations.reduce((sum, d) => sum + (d.days || 0), 0);
-  };
-
-  const calculateEstimatedCost = () => {
-    let total = 0;
-    itinerary.destinations.forEach(dest => {
-      const favDest = favorites.find(f => f.id === dest.id);
-      if (favDest && favDest.avg_daily_cost) {
-        total += favDest.avg_daily_cost * dest.days;
-      }
-    });
-    return Math.round(total);
   };
 
   const handleSaveTrip = async () => {
@@ -265,7 +307,7 @@ export default function TripPlannerPage() {
               ) : (
                 <>
                   {/* Trip Summary */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                  <div className="grid md:grid-cols-4 gap-4 mb-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
                     <div className="text-center">
                       <p className="text-sm text-gray-600">Destinations</p>
                       <p className="text-2xl font-bold text-blue-600">{itinerary.destinations.length}</p>
@@ -276,8 +318,41 @@ export default function TripPlannerPage() {
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-gray-600">Est. Cost</p>
-                      <p className="text-2xl font-bold text-green-600">${calculateEstimatedCost().toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {budgetCalculating ? '…' : `$${(tripBudgetData?.total || 0).toLocaleString()}`}
+                      </p>
+                      {tripBudgetData && (
+                        <p className="text-xs text-gray-500">${tripBudgetData.perPerson.toLocaleString()}/person</p>
+                      )}
                     </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">People</p>
+                      <input
+                        type="number"
+                        value={numberOfPeople}
+                        onChange={(e) => setNumberOfPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max="20"
+                        className="w-16 text-center text-xl font-bold text-orange-600 border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Accommodation type selector */}
+                  <div className="mb-6 flex items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Accommodation:</label>
+                    <select
+                      value={accommodationType}
+                      onChange={(e) => setAccommodationType(e.target.value)}
+                      className="px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="budget">Budget (Hostels)</option>
+                      <option value="mid-range">Mid-range (3-star)</option>
+                      <option value="luxury">Luxury (4-5 star)</option>
+                    </select>
+                    {budgetCalculating && (
+                      <span className="text-xs text-blue-600 animate-pulse">Recalculating…</span>
+                    )}
                   </div>
 
                   {/* Itinerary Items */}
@@ -320,7 +395,9 @@ export default function TripPlannerPage() {
                             {fullDest && (
                               <p className="text-sm text-gray-600">
                                 Est. cost: <span className="font-semibold text-green-600">
-                                  ${Math.round(fullDest.avg_daily_cost * dest.days).toLocaleString()}
+                                  {tripBudgetData?.destBudgets?.[dest.id]
+                                    ? `$${tripBudgetData.destBudgets[dest.id].total.toLocaleString()}`
+                                    : `$${Math.round((fullDest.avg_daily_cost || 0) * dest.days).toLocaleString()}`}
                                 </span>
                               </p>
                             )}
@@ -385,7 +462,7 @@ export default function TripPlannerPage() {
                     >
                       {saving ? 'Saving...' : '💾 Save Trip to My Trips'}
                     </button>
-                    <Link to="/budget" className="flex-1">
+                    <Link to={`/budget?people=${numberOfPeople}&accommodationType=${accommodationType}`} className="flex-1">
                       <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg transition">
                         💰 Calculate Detailed Budget
                       </button>

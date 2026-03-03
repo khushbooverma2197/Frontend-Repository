@@ -7,6 +7,8 @@ import Loading from '../components/Loading';
 export default function BudgetPlannerPage() {
   const [searchParams] = useSearchParams();
   const preselectedDestinationId = searchParams.get('destination');
+  const preselectedPeople = parseInt(searchParams.get('people')) || 2;
+  const preselectedAccommodation = searchParams.get('accommodationType') || 'mid-range';
   const isInitialMount = useRef(true);
 
   const [destinations, setDestinations] = useState([]);
@@ -15,9 +17,9 @@ export default function BudgetPlannerPage() {
   
   const [formData, setFormData] = useState({
     destinationId: preselectedDestinationId || '',
-    numberOfPeople: 2,
+    numberOfPeople: preselectedPeople,
     numberOfDays: 7,
-    accommodationType: 'mid-range',
+    accommodationType: preselectedAccommodation,
     includeFlight: true
   });
 
@@ -40,18 +42,19 @@ export default function BudgetPlannerPage() {
       };
 
       // Calculate budget for each destination using the API
-      for (const dest of itinerary.destinations) {
+      for (let i = 0; i < itinerary.destinations.length; i++) {
+        const dest = itinerary.destinations[i];
         const days = dest.days || 1;
         totalDays += days;
         
         try {
-          // Use the actual calculateBudget API for accurate pricing
+          // Include flight only for the first destination (one international flight for the trip)
           const destBudget = await calculateBudget({
             destinationId: dest.id,
             days: days,
             people: numberOfPeople,
             accommodationType: accommodationType,
-            includeFlight: false // We'll add flights separately for multi-destination
+            includeFlight: i === 0 // flight cost from DB for first destination only
           });
 
           totalCost += destBudget.total || 0;
@@ -62,18 +65,16 @@ export default function BudgetPlannerPage() {
             breakdown.food += destBudget.breakdown.food || 0;
             breakdown.activities += destBudget.breakdown.activities || 0;
             breakdown.transportation += destBudget.breakdown.transportation || 0;
+            if (i === 0) breakdown.flights = destBudget.breakdown.flights || 0;
           }
           
           // Add daily local transportation (taxis, buses, metro) per destination
-          // Average $12-15 per day for local transport within a city
-          const localTransportPerDay = 12;
-          const localTransportCost = localTransportPerDay * days * numberOfPeople;
+          const localTransportCost = 12 * days * numberOfPeople;
           breakdown.transportation += localTransportCost;
           totalCost += localTransportCost;
           
         } catch (error) {
           console.error(`Failed to calculate budget for ${dest.name}:`, error);
-          // Fallback to simple calculation if API fails
           const dailyCost = dest.avg_daily_cost || dest.avgDailyCost || 120;
           const destTotal = dailyCost * days;
           totalCost += destTotal;
@@ -84,15 +85,9 @@ export default function BudgetPlannerPage() {
         }
       }
 
-      // Add international flights for multi-destination trip
-      // Assume one international flight to first destination (per person)
-      const flightCost = 800 * numberOfPeople; // Average international flight
-      breakdown.flights = flightCost;
-      totalCost += flightCost;
-
       // Add inter-destination transportation (flights/trains between destinations)
       if (itinerary.destinations.length > 1) {
-        const interDestTransport = (itinerary.destinations.length - 1) * 250 * numberOfPeople; // Domestic/regional flights
+        const interDestTransport = (itinerary.destinations.length - 1) * 250 * numberOfPeople;
         breakdown.transportation += interDestTransport;
         totalCost += interDestTransport;
       }
@@ -158,12 +153,15 @@ export default function BudgetPlannerPage() {
       isInitialMount.current = false;
       return;
     }
-    
+
     if (tripItinerary && tripItinerary.destinations && tripItinerary.destinations.length > 0) {
-      console.log('Recalculating budget with:', formData.accommodationType, formData.numberOfPeople);
+      // Multi-destination trip mode
       calculateTripBudget(tripItinerary, formData.accommodationType, formData.numberOfPeople);
+    } else if (budgetEstimate && formData.destinationId) {
+      // Single-destination mode: auto-recalculate when any input changes
+      calculateSingleBudget(formData);
     }
-  }, [formData.accommodationType, formData.numberOfPeople]);
+  }, [formData.accommodationType, formData.numberOfPeople, formData.numberOfDays, formData.includeFlight, formData.destinationId]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -173,27 +171,22 @@ export default function BudgetPlannerPage() {
     }));
   };
 
-  const handleCalculate = async (e) => {
-    e.preventDefault();
+  // Shared single-destination calculation logic
+  const calculateSingleBudget = async (data) => {
+    if (!data.destinationId) return;
     setCalculating(true);
-    
     try {
       const estimate = await calculateBudget({
-        destinationId: formData.destinationId,
-        days: parseInt(formData.numberOfDays),
-        people: parseInt(formData.numberOfPeople),
-        accommodationType: formData.accommodationType,
-        includeFlight: formData.includeFlight
+        destinationId: data.destinationId,
+        days: parseInt(data.numberOfDays),
+        people: parseInt(data.numberOfPeople),
+        accommodationType: data.accommodationType,
+        includeFlight: data.includeFlight
       });
-      
-      // Add daily local transportation cost if not included or too low
-      const days = parseInt(formData.numberOfDays);
-      const people = parseInt(formData.numberOfPeople);
-      const localTransportPerDay = 12; // Average daily local transport cost per person
-      const localTransportCost = localTransportPerDay * days * people;
-      
-      // Create a new estimate object with updated values (don't mutate original)
-      const updatedEstimate = {
+      const days = parseInt(data.numberOfDays);
+      const people = parseInt(data.numberOfPeople);
+      const localTransportCost = 12 * days * people;
+      setBudgetEstimate({
         ...estimate,
         breakdown: {
           ...(estimate.breakdown || {}),
@@ -201,15 +194,17 @@ export default function BudgetPlannerPage() {
         },
         total: (estimate.total || 0) + localTransportCost,
         perPerson: Math.round(((estimate.total || 0) + localTransportCost) / people)
-      };
-      
-      setBudgetEstimate(updatedEstimate);
+      });
     } catch (error) {
       console.error('Error calculating budget:', error);
-      alert('Failed to calculate budget. Please try again.');
     } finally {
       setCalculating(false);
     }
+  };
+
+  const handleCalculate = async (e) => {
+    e.preventDefault();
+    await calculateSingleBudget(formData);
   };
 
   if (loading) return <Loading />;

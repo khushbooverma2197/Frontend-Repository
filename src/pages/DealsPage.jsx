@@ -78,18 +78,18 @@ export default function DealsPage() {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            🔥 Exclusive Travel Deals
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-3">
+            Exclusive Travel Deals
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-gray-500">
             Save big on flights, hotels, and vacation packages
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Limited time offers - Book before they're gone!
+          <p className="text-sm text-gray-400 mt-1">
+            Limited time offers — book before they're gone!
           </p>
         </div>
 
@@ -104,10 +104,10 @@ export default function DealsPage() {
             <button
               key={filter.id}
               onClick={() => setFilterType(filter.id)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all ${
+              className={`px-6 py-3 rounded-full font-semibold transition-all text-sm ${
                 filterType === filter.id
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 hover:shadow-md'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
               <span className="mr-2">{filter.icon}</span>
@@ -118,12 +118,12 @@ export default function DealsPage() {
 
         {/* Featured Deals */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">⭐ Featured Deals</h2>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-6">Featured Deals</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {deals.filter(deal => deal.featured).map(deal => (
-              <div key={deal.id} className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow relative">
+              <div key={deal.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md overflow-hidden transition-all duration-200 relative">
                 <div className="absolute top-4 left-4 z-10">
-                  <span className="px-4 py-2 bg-red-600 text-white font-bold rounded-full text-lg shadow-lg">
+                  <span className="px-3 py-1.5 bg-blue-600 text-white font-bold rounded-full text-sm shadow-lg">
                     {deal.discount}% OFF
                   </span>
                 </div>
@@ -182,10 +182,10 @@ export default function DealsPage() {
 
         {/* All Deals */}
         <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">All Deals</h2>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight mb-6">All Deals</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDeals.filter(deal => !deal.featured).map(deal => (
-              <div key={deal.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+              <div key={deal.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md overflow-hidden transition-all duration-200">
                 <div className="relative h-48">
                   <img
                     src={deal.image}
@@ -193,7 +193,7 @@ export default function DealsPage() {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-3 right-3">
-                    <span className="px-3 py-1 bg-orange-500 text-white font-bold rounded-full shadow-lg">
+                    <span className="px-2.5 py-1 bg-blue-600 text-white font-bold rounded-full text-xs shadow">
                       -{deal.discount}%
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export default function DealsPage() {
                   </div>
                   
                   <Link to={`/destination/${deal.destinationId}`}>
-                    <button className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                    <button className="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition text-sm">
                       View Deal
                     </button>
                   </Link>
